@@ -7,17 +7,19 @@ import math
 
 num_channels = 3
 img_rows, img_cols = 32, 32
+input_shape = None
 mean_img = None
 
 
 def get_train_data(num_classes):
     global mean_img
+    global input_shape
 
-    x_train = np.load('X_train.npy')
-    y_train = np.load('Y_train.npy')
-    x_train_flip = np.load('X_train_flip.npy')
+    x_train = np.load('../dataset/X_train.npy')
+    y_train = np.load('../dataset/Y_train.npy')
+    x_train_flip = np.load('../dataset/X_train_flip.npy')
 
-    real_classes_train = np.load('real_classes_train.npy')
+    real_classes_train = np.load('../dataset/real_classes_train.npy')
     real_classes_train_ids = [i for i, label in enumerate(real_classes_train) if label in ['AH', 'AD', 'H']]
     print('Train samples: ' + str(x_train.shape[0]))
     print('Train samples: ' + str(x_train.shape[0]))
@@ -28,8 +30,10 @@ def get_train_data(num_classes):
     # Preprocess images
     if K.image_data_format() == 'channels_first':
         x_train = x_train.reshape(x_train.shape[0], num_channels, img_rows, img_cols)
+        input_shape = (num_channels, img_rows, img_cols)
     else:
         x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, num_channels)
+        input_shape = (img_rows, img_cols, num_channels)
     x_train = x_train.astype('float32')
 
     # As in AlexNet, with subtract the mean image to have zero mean in the training set
@@ -58,9 +62,9 @@ def get_dev_test_data(num_classes):
     if mean_img is None:
         raise Exception("Mean image not available. Please call get_train_data first")
 
-    x_test_orig = np.load('X_test.npy') # orig because it will be split to obtain the validation set
-    y_test_orig = np.load('Y_test.npy')
-    real_classes_test = np.load('real_classes_test.npy')
+    x_test_orig = np.load('../dataset/X_test.npy') # orig because it will be split to obtain the validation set
+    y_test_orig = np.load('../dataset/Y_test.npy')
+    real_classes_test = np.load('../dataset/real_classes_test.npy')
     real_classes_test_ids = [i for i, label in enumerate(real_classes_test) if label in ['AH', 'AD', 'H']]
     print('Test samples: ' + str(x_test_orig.shape[0]))
     print('Real test samples: ' + str(len(real_classes_test_ids)))
@@ -107,3 +111,20 @@ def get_dev_test_data(num_classes):
 
     return x_val_real, y_val_real, x_val_fake, y_val_fake,\
            x_test_real, y_test_real, x_test_fake, y_test_fake
+
+
+def augment_data():
+    # X = np.concatenate((X_train, X_test))
+    # n_tot_samples = X.shape[0]
+    # for i in range(n_tot_samples):
+    #  sample = X[i]
+    #  res = np.flip(sample, axis=1) # mirror image
+    #  X = np.append(X, [res], axis=0)
+
+    # X_flip = X[n_tot_samples:]
+    # n_train_samples = X_train.shape[0]
+    # X_train_flip = X_flip[:n_train_samples]
+    # Y_train_flip = Y_train
+    # X_test_flip = X_flip[n_train_samples:]
+    # Y_test_flip = Y_test
+    return 0
