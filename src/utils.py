@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score
 
 # Hyperparameters
 batch_size = 32
+t = 10  # a.k.a. num predictions
 
 
 def train_model(model, x_train, y_train, x_val, y_val, epochs):
@@ -15,7 +16,10 @@ def train_model(model, x_train, y_train, x_val, y_val, epochs):
 
 
 # This function computes the accuracy and the uncertainty of a model wrt a set of samples
-def evaluate_model(model, x, y, num_predictions):
+def evaluate_model(model, x, y, multiple_pred):
+
+    num_predictions = t if multiple_pred else 1
+
     # predict real samples to compute 1. and 2.
     n_samples = x.shape[0]
     p_hat = np.zeros((num_predictions, n_samples, data_setup.num_classes))

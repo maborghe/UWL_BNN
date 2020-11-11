@@ -1,8 +1,7 @@
 import keras
 import tensorflow as tf
 from network import *
-from loss import *
-import data_setup
+import utils
 
 learning_rate = 10e-5
 decay_steps = 1000
@@ -36,18 +35,6 @@ def get_bcnn_model():
 
 # we define our custom model here
 class CustomModel(keras.Model):
-    def get_config(self):
-        pass
-
-    def call(self, inputs, training=None, mask=None):
-        pass
-
-    def __init__(self, batch_size, num_classes, num_predictions):
-        # TODO: call superclass init
-        self.batch_size = batch_size
-        self.num_classes = num_classes
-        self.num_predictions = num_predictions
-
     def train_step(self, data):
         # Unpack the data. Its structure depends on your model and
         # on what you pass to `fit()`.
@@ -61,14 +48,14 @@ class CustomModel(keras.Model):
             # we use to compute the loss of the forward pass
 
             # we store the T predictions in a matrix with shape (T,B,K)
-            pred_matrix = tf.zeros([self.num_predictions, self.batch_size, self.num_classes], tf.float64)
+            pred_matrix = tf.zeros([utils.t, utils.batch_size, data_setup.num_classes], tf.float64)
 
-            for i in range(self.num_predictions):
+            for i in range(utils.t):
                 y_pred = self(x, training=True)  # Forward pass
                 pred_matrix = tf.concat(axis=0, values=[pred_matrix[:i], [y_pred], pred_matrix[i + 1:]])
 
             # Compute the loss value according to my_loss_fct
-            loss = my_loss_fct(y, pred_matrix)
+            loss = self.compiled_loss(y, pred_matrix)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -81,9 +68,11 @@ class CustomModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
 
-def get_custom_model():
+def get_custom_model(loss_fn):
     (inp, out) = get_layers(True)
     model = CustomModel(inputs=inp, outputs=out)
 
     model.compile(optimizer=keras.optimizers.Adadelta(),
+                  loss=loss_fn,
                   metrics=['accuracy'])
+    return model
