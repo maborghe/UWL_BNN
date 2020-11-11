@@ -33,7 +33,16 @@ def get_bcnn_model():
     return model
 
 
-# we define our custom model here
+def get_custom_model(loss_fn):
+    (inp, out) = get_layers(True)
+    model = CustomModel(inputs=inp, outputs=out)
+
+    model.compile(optimizer=keras.optimizers.Adadelta(),
+                  loss=loss_fn,
+                  metrics=['accuracy'])
+    return model
+
+
 class CustomModel(keras.Model):
     def train_step(self, data):
         # Unpack the data. Its structure depends on your model and
@@ -67,12 +76,3 @@ class CustomModel(keras.Model):
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
-
-def get_custom_model(loss_fn):
-    (inp, out) = get_layers(True)
-    model = CustomModel(inputs=inp, outputs=out)
-
-    model.compile(optimizer=keras.optimizers.Adadelta(),
-                  loss=loss_fn,
-                  metrics=['accuracy'])
-    return model

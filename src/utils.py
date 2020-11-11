@@ -17,7 +17,6 @@ def train_model(model, x_train, y_train, x_val, y_val, epochs):
 
 # This function computes the accuracy and the uncertainty of a model wrt a set of samples
 def evaluate_model(model, x, y, multiple_pred):
-
     num_predictions = t if multiple_pred else 1
 
     # predict real samples to compute 1. and 2.
@@ -26,18 +25,30 @@ def evaluate_model(model, x, y, multiple_pred):
     for i in range(num_predictions):
         p_hat[i] = model.predict(x)
 
-    p_hat = np.transpose(p_hat, [1, 0, 2])  # change shape to (n_samples, n_predictions, n_classes)
-    p_hat_avg = np.mean(p_hat, axis=1)  # avg score for each class, with shape (n_samples, n_classes)
-    y_pred = np.argmax(p_hat_avg,
-                       axis=1)  # extract class with highest score for each sample, wich shape (n_samples,)
+    y_pred_mean, y_pred_uc = compute_pred_distribution(p_hat)
 
+    y_pred = np.argmax(y_pred_mean, axis=1)  # extract class with highest score for each sample
     y_pred_one_hot = keras.utils.to_categorical(y_pred, data_setup.num_classes)
     acc = accuracy_score(y, y_pred_one_hot)
-    # Compute uncertainty
-    epistemic = np.mean(p_hat ** 2, axis=1) - np.mean(p_hat, axis=1) ** 2
-    aleatoric = np.mean(p_hat * (1 - p_hat), axis=1)
-    uncertainty = epistemic + aleatoric  # with shape (n_samples, n_classes)
-    uc = uncertainty[
-        range(n_samples), y_pred]  # for each samples we consider the uncertainty of the predicted class
+
+    uc = y_pred_uc[range(n_samples), y_pred]  # for each samples we consider the uncertainty of the predicted class
     uc = np.mean(uc)  # compute a single scalar for all samples
     return acc, uc
+
+
+# y_true has shape (n_samples, n_classes)
+# y_pred has shape (num_predictions, n_samples, n_classes)
+# y_pred is the matrix of all T predictions for each sample
+def compute_pred_distribution(y_pred):
+    y_pred = np.transpose(y_pred, [1, 0, 2])  # change shape to (batch_size, num_predictions, num_classes)
+    # 1. Compute mean
+    y_pred_mean = np.mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
+    # 1.1 Recompute softmax across each sample
+    y_pred_mean = np.exp(y_pred_mean)
+    y_pred_mean /= np.sum(y_pred_mean, axis=1, keepdims=True)
+
+    # 2. Compute uncertainty
+    epistemic = np.mean(y_pred ** 2, axis=1) - np.mean(y_pred, axis=1) ** 2
+    aleatoric = np.mean(y_pred * (1 - y_pred), axis=1)
+    y_pred_uc = epistemic + aleatoric  # with shape (n_samples, n_classes)
+    return y_pred_mean, y_pred_uc  # each with shape (n_samples, n_classes)
