@@ -31,7 +31,8 @@ def evaluate_model(model, x, y, multiple_pred):
     y_pred_one_hot = keras.utils.to_categorical(y_pred, data_setup.num_classes)
     acc = accuracy_score(y, y_pred_one_hot)
 
-    uc = y_pred_uc[range(n_samples), y_pred]  # for each samples we consider the uncertainty of the predicted class
+    # for each samples we consider the uncertainty of the predicted class
+    uc = tf.gather_nd(y_pred_uc, tf.transpose([range(n_samples), y_pred]))
     uc = np.mean(uc)  # compute a single scalar for all samples
     return acc, uc
 
@@ -40,15 +41,16 @@ def evaluate_model(model, x, y, multiple_pred):
 # y_pred has shape (num_predictions, n_samples, n_classes)
 # y_pred is the matrix of all T predictions for each sample
 def compute_pred_distribution(y_pred):
-    y_pred = np.transpose(y_pred, [1, 0, 2])  # change shape to (batch_size, num_predictions, num_classes)
+    y_pred = tf.transpose(y_pred, [1, 0, 2])  # change shape to (batch_size, num_predictions, num_classes)
     # 1. Compute mean
-    y_pred_mean = np.mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
+    mean_unnorm = tf.math.reduce_mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
     # 1.1 Recompute softmax across each sample
-    y_pred_mean = np.exp(y_pred_mean)
-    y_pred_mean /= np.sum(y_pred_mean, axis=1, keepdims=True)
+    mean_exp = tf.math.exp(mean_unnorm)
+    mean_exp_sum = tf.math.reduce_sum(mean_exp, axis=1, keepdims=True)
+    y_pred_mean = mean_exp / mean_exp_sum
 
     # 2. Compute uncertainty
-    epistemic = np.mean(y_pred ** 2, axis=1) - np.mean(y_pred, axis=1) ** 2
-    aleatoric = np.mean(y_pred * (1 - y_pred), axis=1)
+    epistemic = tf.reduce_mean(y_pred ** 2, axis=1) - tf.reduce_mean(y_pred, axis=1) ** 2
+    aleatoric = tf.reduce_mean(y_pred * (1 - y_pred), axis=1)
     y_pred_uc = epistemic + aleatoric  # with shape (n_samples, n_classes)
     return y_pred_mean, y_pred_uc  # each with shape (n_samples, n_classes)

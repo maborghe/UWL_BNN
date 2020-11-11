@@ -24,7 +24,7 @@ def get_train_data():
     real_classes_train_ids = [i for i, label in enumerate(real_classes_train) if label in ['AH', 'AD', 'H']]
     print('Train samples: ' + str(x_train.shape[0]))
     print('Train samples: ' + str(x_train.shape[0]))
-    plt.imshow(x_train[0])
+    # plt.imshow(x_train[0])
 
     x_train = np.concatenate((x_train, x_train_flip))
     y_train = np.concatenate((y_train, y_train))

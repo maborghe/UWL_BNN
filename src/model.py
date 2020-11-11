@@ -76,3 +76,25 @@ class CustomModel(keras.Model):
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
+    def test_step(self, data):
+        # Unpack the data
+        x, y = data
+
+        # we store the T predictions in a matrix with shape (T,B,K)
+        pred_matrix = tf.zeros([utils.t, utils.batch_size, data_setup.num_classes], tf.float64)
+
+        for i in range(utils.t):
+            y_pred = self(x, training=True)  # Forward pass
+            pred_matrix = tf.concat(axis=0, values=[pred_matrix[:i], [y_pred], pred_matrix[i + 1:]])
+
+        # Compute the loss value according to my_loss_fct
+        # self.compiled_loss(y, pred_matrix)
+        print('\nCompiled loss executed')
+        # Update the metrics.
+        y_pred_mean, _ = utils.compute_pred_distribution(pred_matrix)
+        # self.compiled_metrics.update_state(y, y_pred_mean)
+        print('Compiled metrics updated')
+        # Return a dict mapping metric names to current value.
+        # Note that it will include the loss (tracked in self.metrics).
+        return {m.name: m.result() for m in self.metrics}
+
