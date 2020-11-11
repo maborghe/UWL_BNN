@@ -6,12 +6,13 @@ import random
 import math
 
 num_channels = 3
+num_classes = 3
 img_rows, img_cols = 32, 32
 input_shape = None
 mean_img = None
 
 
-def get_train_data(num_classes):
+def get_train_data():
     global mean_img
     global input_shape
 
@@ -58,7 +59,7 @@ def get_train_data(num_classes):
     return x_train, y_train, x_train_real, y_train_real
 
 
-def get_dev_test_data(num_classes):
+def get_dev_test_data():
     if mean_img is None:
         raise Exception("Mean image not available. Please call get_train_data first")
 

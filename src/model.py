@@ -2,6 +2,7 @@ import keras
 import tensorflow as tf
 from network import *
 from loss import *
+import data_setup
 
 learning_rate = 10e-5
 decay_steps = 1000
@@ -10,7 +11,7 @@ decay_rate = 0.8
 
 
 def get_vanilla_model():
-    (inp, out) = getLayers(False)
+    (inp, out) = get_layers(False)
     lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=learning_rate,
                                                               decay_steps=decay_steps,
                                                               decay_rate=decay_rate)
@@ -22,7 +23,7 @@ def get_vanilla_model():
 
 
 def get_bcnn_model():
-    (inp, out) = getLayers(True)
+    (inp, out) = get_layers(True)
     lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=learning_rate,
                                                               decay_steps=decay_steps,
                                                               decay_rate=decay_rate)
@@ -81,7 +82,7 @@ class CustomModel(keras.Model):
 
 
 def get_custom_model():
-    (inp, out) = getLayers(True)
+    (inp, out) = get_layers(True)
     model = CustomModel(inputs=inp, outputs=out)
 
     model.compile(optimizer=keras.optimizers.Adadelta(),

@@ -1,5 +1,6 @@
 import numpy as np
 import keras
+import tensorflow as tf
 from sklearn.metrics import accuracy_score
 
 
@@ -9,8 +10,9 @@ epochs = 20
 
 
 def train_model(model, x_train, y_train, x_val, y_val):
-    model.fit(x_train, y_train, batch_size=batch_size, epochs=30, verbose=1,
-              validation_data=(x_val, y_val))
+    with tf.device("gpu:0"):
+        model.fit(x_train, y_train, batch_size=batch_size, epochs=30, verbose=1,
+                  validation_data=(x_val, y_val))
 
 
 # This function computes the accuracy and the uncertainty of a model wrt a set of samples
