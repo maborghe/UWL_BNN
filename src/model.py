@@ -3,6 +3,7 @@ import tensorflow as tf
 from network import *
 import utils
 import loss
+import metric
 
 learning_rate = 10e-5
 decay_steps = 1000
@@ -40,7 +41,7 @@ def get_custom_model(loss_fn):
 
     model.compile(optimizer=keras.optimizers.Adadelta(),
                   loss=loss_fn,
-                  metrics=loss.my_acc)
+                  metrics=[metric.custom_acc, metric.custom_uc])
     return model
 
 
@@ -80,6 +81,7 @@ class CustomModel(keras.Model):
     def test_step(self, data):
         # Unpack the data
         x, y = data
+
         # we store the T predictions in a matrix with shape (T,B,K)
         pred_matrix = tf.zeros([utils.t, utils.batch_size, data_setup.num_classes], tf.float64)
 

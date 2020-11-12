@@ -10,12 +10,12 @@ t = 10  # a.k.a. num predictions
 
 
 def train_model(model, x_train, y_train, x_val, y_val, epochs):
-    # We cut the samples so that it is a multiple of the batch size (otherwise we get problems in the customized model)
+    # We cut the samples so that it is a multiple of the batch size
     rem_train = x_train.shape[0] % batch_size
-    rem_val = x_val.shape[0] % batch_size
     if rem_train != 0:
         x_train = x_train[:-rem_train]
         y_train = y_train[:-rem_train]
+    rem_val = x_val.shape[0] % batch_size
     if rem_val != 0:
         x_val = x_val[:-rem_val]
         y_val = y_val[:-rem_val]
@@ -26,7 +26,7 @@ def train_model(model, x_train, y_train, x_val, y_val, epochs):
 
 
 # This function computes the accuracy and the uncertainty of a model wrt a set of samples
-def evaluate_model(model, x, y, multiple_pred):
+def evaluate_baseline(model, x, y, multiple_pred):
     num_predictions = t if multiple_pred else 1
 
     # predict real samples to compute 1. and 2.
@@ -45,6 +45,15 @@ def evaluate_model(model, x, y, multiple_pred):
     uc = tf.gather_nd(y_pred_uc, tf.transpose([range(n_samples), y_pred]))
     uc = np.mean(uc)  # compute a single scalar for all samples
     return acc, uc
+
+
+def evaluate_custom(model, x, y):
+    # We cut the samples so that it is a multiple of the batch size
+    rem = x.shape[0] % batch_size
+    if rem != 0:
+        x = x[:-rem]
+        y = y[:-rem]
+    return model.evaluate(x, y, batch_size=batch_size)
 
 
 # y_true has shape (n_samples, n_classes)

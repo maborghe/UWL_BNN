@@ -1,6 +1,5 @@
 import utils
 import keras
-import tensorflow as tf
 
 
 # we define our custom loss function here
@@ -14,9 +13,3 @@ def my_loss_fct(y_true, y_pred):
     # each sample and then return a mean weighted by the uncertainty)
     pred_loss = keras.losses.categorical_crossentropy(y_true, y_pred_mean)
     return pred_loss
-
-
-def my_acc(y_true, y_pred):
-    y_pred_mean, y_pred_uc = utils.compute_pred_distribution(y_pred)
-    pred_acc = keras.metrics.categorical_accuracy(y_true, y_pred_mean)
-    return pred_acc
