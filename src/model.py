@@ -88,10 +88,10 @@ class CustomModel(keras.Model):
             pred_matrix = tf.concat(axis=0, values=[pred_matrix[:i], [y_pred], pred_matrix[i + 1:]])
 
         # Compute the loss value according to my_loss_fct
-        # self.compiled_loss(y, pred_matrix)
+        self.compiled_loss(y, pred_matrix)
 
         # Update the metrics.
-        # self.compiled_metrics.update_state(y, y_pred_mean)
+        self.compiled_metrics.update_state(y, pred_matrix)
 
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).

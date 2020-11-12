@@ -10,6 +10,16 @@ t = 10  # a.k.a. num predictions
 
 
 def train_model(model, x_train, y_train, x_val, y_val, epochs):
+    # We cut the samples so that it is a multiple of the batch size (otherwise we get problems in the customized model)
+    rem_train = x_train.shape[0] % batch_size
+    rem_val = x_val.shape[0] % batch_size
+    if rem_train != 0:
+        x_train = x_train[:-rem_train]
+        y_train = y_train[:-rem_train]
+    if rem_val != 0:
+        x_val = x_val[:-rem_val]
+        y_val = y_val[:-rem_val]
+
     with tf.device("gpu:0"):
         model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1,
                   validation_data=(x_val, y_val))
