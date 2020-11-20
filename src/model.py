@@ -5,7 +5,7 @@ import utils
 import loss
 import metric
 
-learning_rate = 10e-4
+learning_rate = 10e-5
 decay_steps = 1000
 decay_rate = 0.8
 # num_predictions = 10  # aka 'T'
