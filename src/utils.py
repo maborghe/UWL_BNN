@@ -3,6 +3,7 @@ import keras
 import tensorflow as tf
 import data_setup
 from sklearn.metrics import accuracy_score
+import keras.backend as K
 
 # Hyperparameters
 batch_size = 32
@@ -63,13 +64,15 @@ def compute_pred_distribution(y_pred):
     y_pred = tf.transpose(y_pred, [1, 0, 2])  # change shape to (batch_size, num_predictions, num_classes)
     # 1. Compute mean
     mean_unnorm = tf.math.reduce_mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
+    n_nan = keras.backend.sum(tf.cast(tf.math.is_nan(mean_unnorm), tf.float32))
+    # keras.backend.print_tensor(n_nan, 'Score nans: ')
     # 1.1 Recompute softmax across each sample
-    mean_exp = tf.math.exp(mean_unnorm)
-    mean_exp_sum = tf.math.reduce_sum(mean_exp, axis=1, keepdims=True)
-    y_pred_mean = mean_exp / mean_exp_sum
+    y_pred_mean = K.softmax(mean_unnorm, axis=-1)
 
     # 2. Compute uncertainty
     epistemic = tf.reduce_mean(y_pred ** 2, axis=1) - tf.reduce_mean(y_pred, axis=1) ** 2
     aleatoric = tf.reduce_mean(y_pred * (1 - y_pred), axis=1)
     y_pred_uc = epistemic + aleatoric  # with shape (n_samples, n_classes)
+    n_nan2 = keras.backend.sum(tf.cast(tf.math.is_nan(y_pred_uc), tf.float32))
+    # keras.backend.print_tensor(n_nan2, 'Pred uc nans: ')
     return y_pred_mean, y_pred_uc  # each with shape (n_samples, n_classes)
