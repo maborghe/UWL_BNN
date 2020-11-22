@@ -7,7 +7,7 @@ import keras.backend as K
 
 # Hyperparameters
 batch_size = 32
-t = 10  # a.k.a. num predictions
+t = 100  # a.k.a. num predictions
 
 
 def train_model(model, x_train, y_train, x_val, y_val, epochs):
