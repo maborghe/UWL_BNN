@@ -12,6 +12,7 @@ t = 10  # a.k.a. num predictions
 
 def train_model(model, x_train, y_train, x_val, y_val, epochs):
     # We cut the samples so that it is a multiple of the batch size
+    # TODO: It's not necessary to do that!
     rem_train = x_train.shape[0] % batch_size
     if rem_train != 0:
         x_train = x_train[:-rem_train]
@@ -63,14 +64,10 @@ def evaluate_custom(model, x, y):
 def compute_pred_distribution(y_pred):
     y_pred = tf.transpose(y_pred, [1, 0, 2])  # change shape to (batch_size, num_predictions, num_classes)
     # 1. Compute mean
-    mean_unnorm = tf.math.reduce_mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
-    # 1.1 Recompute softmax across each sample
-    y_pred_mean = K.softmax(mean_unnorm, axis=-1)
+    y_pred_mean = tf.math.reduce_mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
 
     # 2. Compute uncertainty
     epistemic = tf.reduce_mean(y_pred ** 2, axis=1) - tf.reduce_mean(y_pred, axis=1) ** 2
     aleatoric = tf.reduce_mean(y_pred * (1 - y_pred), axis=1)
     y_pred_uc = epistemic + aleatoric  # with shape (n_samples, n_classes)
-    n_nan2 = keras.backend.sum(tf.cast(tf.math.is_nan(y_pred_uc), tf.float32))
-    # keras.backend.print_tensor(n_nan2, 'Pred uc nans: ')
     return y_pred_mean, y_pred_uc  # each with shape (n_samples, n_classes)

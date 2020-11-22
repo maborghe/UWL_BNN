@@ -43,8 +43,8 @@ def get_custom_model(loss_fn):
                                                               decay_steps=decay_steps,
                                                               decay_rate=decay_rate)
 
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
-                  loss=loss_fn,
+    model.compile(loss=loss_fn,
+                  optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
                   metrics=[metric.custom_acc, metric.custom_uc])
     return model
 
