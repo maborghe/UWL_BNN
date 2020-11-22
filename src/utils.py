@@ -64,8 +64,6 @@ def compute_pred_distribution(y_pred):
     y_pred = tf.transpose(y_pred, [1, 0, 2])  # change shape to (batch_size, num_predictions, num_classes)
     # 1. Compute mean
     mean_unnorm = tf.math.reduce_mean(y_pred, axis=1)  # avg score for each class, with shape (n_samples, num_classes)
-    n_nan = keras.backend.sum(tf.cast(tf.math.is_nan(mean_unnorm), tf.float32))
-    # keras.backend.print_tensor(n_nan, 'Score nans: ')
     # 1.1 Recompute softmax across each sample
     y_pred_mean = K.softmax(mean_unnorm, axis=-1)
 

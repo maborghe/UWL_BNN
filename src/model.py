@@ -39,7 +39,11 @@ def get_custom_model(loss_fn):
     (inp, out) = get_layers(True)
     model = CustomModel(inputs=inp, outputs=out)
 
-    model.compile(optimizer=keras.optimizers.Adadelta(),
+    lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=learning_rate,
+                                                              decay_steps=decay_steps,
+                                                              decay_rate=decay_rate)
+
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
                   loss=loss_fn,
                   metrics=[metric.custom_acc, metric.custom_uc])
     return model
