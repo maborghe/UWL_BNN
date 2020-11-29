@@ -1,0 +1,201 @@
+\documentclass[11pt,twoside,a4paper]{article}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{subcaption}
+\usepackage{chngpage}
+\usepackage{amsmath}
+
+\begin{document}
+%\includegraphics[width = 40mm]{polito.png}
+\title{Uncertainty-weighted loss for B-CNNs}
+\author{Matteo Borghesi, Mattia Tarquinio}
+\maketitle
+
+\section{Introduction}
+This report presents an application of Bayesian Neural Networks (BNN) in the field of Bioinformatics. In particular, the central topic is if and how the uncertainty measure provided by a BNN can be used to improve the training phase and accordingly the overall performance.\newline
+The report is structured as follows: in sec.~\ref{sec:NN} a brief background of Convolutional and Bayesian Neural Networks is outlines, in sec.~\ref{sec:data} the dataset and the preprocessing phase are presented; in sec.~\ref{sec:analysis} different models with growing complexity are discussed. Such models are then evaluated and compared in sec.~\ref{sec:evaluation}.
+
+\section{Neural Networks for Image Classification}
+\label{sec:NN}
+\subsection{Convolutional Neural Networks}
+In recent years, Convolutional Neural Networks (CNNs) have obtained a large success also in many application, thanks to their capability to handle complex tasks and their broad applicability. In particular, a major boost to their use for classification purposes occurred starting from 2012, when the CNN-based architecture \textit{AlexNet} won the ImageNet competition. In the following years, deeper and deeper networks were developed, bringing to considerable achievements in the ImageNet competition as well as in other contexts.\newline
+The idea behind this technology is the use of a relative small number of shared parameters inside each layer of a neural network, as opposed to traditional Feed Forward Networks (FFNs), that only use fully-connected layers. Such parameters are structured in form of sliding filters that can be used to apply a convolution at each position in the input image. Such layers, called \textit{convolutional}, can be stacked at will as well as interleaved with other types of layers, such as pooling or fully-connected layers. As an example, the aforementioned \textit{AlexNet} consists of 5 convolutional layers, 3 max-pooling layers, 2 normalization layers, 2 fully connected layers, and 1 softmax layer.\newline
+Convolutional Networks have many advantages that lead to their success: for example, a lower number of parameters that allows for deeper networks with lower training time, or higher flexibility compared to prior techniques, thanks to properties such as translation invariance. However, the application of CNNs in many different fields has brought to light the necessity for further developments. In the biomedical context, a big limitation of this model is represented by its inability to provide a measure of confidence of the output.\newline
+For example, in the case of classification the output of a CNN is a vector containing a score for each class, predicting how likely the input is to belong to the class. Such vector is normalized so that it can be interpreted as a probability distribution across all the classes. A way to extract a measure of uncertainty is hence to compute the so-called \textit{softmax uncertainty}, i.e. to compute the empirical standard deviation of the network output. Ideally, if a prediction is uncertain all scores are equally low, and the standard deviation of the output vector is zero. However, this method does not work well empirically, and makes it difficult to cluster samples according to a single threshold (in this case, based on the standard deviation).
+
+\subsection{Uncertainty estimation}
+\label{sec:uncertainty}
+In response to the limitation presented in the last section, Bayesian Neural Networks (BNNs) have been introduced. The goal of this type of networks is to offer a Bayesian approximation of a Gaussian process. In this way, each prediction is modeled not as a single number, but as a Gaussian distribution that contains a confidence measure for each class score. There are mainly two ways to build a BNN: Variational inference and Monte Carlo Dropout. In this context we are going to focus on the second one.\newline
+Dropout is a regularization technique that consists in \textit{turning off} a certain number of neurons at each iteration, in order to provide less dependence between different neurons and hence be able to generalize better to new samples. For this reason, Dropout as a regularization method is only employed at training time. Instead, Monte Carlo Dropout (a.k.a. Variational Dropout) applies the same idea at prediction time, so that the network prediction for a given input is not deterministic, since each neuron \textit{drops out} with a certain probability (which, as in the case of traditional Dropout, is a hyperparameter).\newline
+The way 
+
+
+\section{Data setup}
+\label{sec:data}
+The dataset of interest consists of series of histological images, realized through digitalization of tissue samples. All images have 32x32 pixel across three channels. The goal of the classification task is to recognize tissues affected by colorectal cancer or by lesions that may lead to it. Therefore, three classes of interest are identified: healthy tissue, cancer and adenoma. In order to properly analyze the robustness of the models to uncertainty, the dataset also contains images from other spurious classes (specifically blood, fat, glass and stroma) that are randomly labeled as belonging to one of the three classes of interest. These two kinds of images are called from this moment respectively \textit{real} and \textit{spurious}.\newline
+The dataset is split as usual into three parts: a training set, a validation set (a.k.a. dev set) and a test set. The sizes of the sets are respectively 12336, 3654 and 3654. It is a common best practice that the samples in the validation and in the test sets belong to the same distribution, in order to tune the model to the inputs it will actually receive at test time. This is done by splitting randomly the original test set into two equal parts, the first one of which is used for validation (this also explains why the sizes of the two sets correspond with each other).\newline
+On the other hand, the training set is quite small, which may bring to difficulties for the network to learn effective weights. A common technique to avoid this is to perform data augmentation, i.e. to create new training samples starting from the ones available. Of course it is important that the new samples are equivalent to the original ones for classification purposes. In this case, each training sample is flipped on the vertical axis, so that the left and right part of the image are swapped. This way, the training set doubles its size, eventually consisting of 24672 images.\newline
+For the purposes of the analysis, it is interesting to consider also the subset of the real images, i.e. those that have a correct label.
+Training, validation and test sets for this case are built by simply removing the spurious samples from the original sets. In this case, the size of the training set is 12000, while the other two sets may vary according to the random splitting performed in the first part. However their cardinalities sum up to 3000 and, since the sampling was performed randomly, on average their size is also equal.
+
+
+\section{Metrics}
+\label{sec:metrics}
+Before delving into the definition of a new model, it can be useful which goals such model should achieve. This can be expressed as defining one or more metrics that will be used to evaluate the model and to compare it to the current state of art, which is the baseline of the evaluation.\newline
+In this case, there are two objectives that should be reached: being able to correctly classify histological images while also recognizing samples that do not belong to any of the classes of interest. Concretely, the first means that we are interested in achieving a high accuracy among the real images. As for the second part, the goal is to obtain a high uncertainty measure for spurious samples and a low uncertainty for real images, so that it is possible to easily cluster the data according to a threshold.\newline
+As said before, there are different uncertainty measures depending on the type of network: in case of a CNN the only way is to compute the softmax uncertainty, while in case of a BNN it is possible to use the aleatoric and epistemic uncertainties introduced by ...
+
+\section{Analysis}
+\label{sec:analysis}
+The use of BNNs in the outlined context is analyzed on the basis of three models. The first one consists of a CNN trained on real samples only: the purpose of this model is to devise an architecture that is capable of effectively solving the classification task with a small bias in the first place. The same model is then trained on all samples, in order to see how the classification of real samples is impacted by the presence of fake samples in the training set. After this, a BNN is trained on all samples with the aim of assigning an uncertainty measure to the prediction. At last, a BNN is trained with a custom loss function that drives the training process according to the uncertainty assigned to each sample.\newline
+All models use the same network architecture and are trained with the same hyperparameters, that are chosen in the construction of the first model. While this can be a limitation in some cases, e.g. because a model could increase its performance if trained differently, it also provides a fair framework for the comparison of the different alternatives.
+
+\subsection{CNN model}
+\label{sec:naive_model}
+As said before, the purpose of the first step is to build a network architecture that is able to correctly classify histological images. In the beginning this will be limited to real samples, i.e. images whose label corresponds to their actual class.\newline
+The model to build should fulfill two requirements:
+\begin{itemize}
+\item to have low bias, i.e. it should learn to classify the images provided in the training phase
+\item to have low variance, i.e. it should be able to generalize in order to classify new images, without being explicitly trained on them.
+\end{itemize}
+The construction of a deep learning model usually begins with the first point, the second point is then addressed using a bunch of \textit{regularization} techniques that has been proved to be particularly effective.\newline
+Since the dataset is quite small, it is advisable to come up with a model which is not too deep. In fact, there is a long-known correlation between the number of parameters in a learning model and its variance, whih leads deep model to generalize worse if the training set is too small. Besides, He et al. have shown that the training performance also tends to decrease if the network is too deep, due to the difficulty for the layers to learn an identity mapping without using residuals.\newline
+The final architecture is outline in Tab.~\ref{tab:arch}: it contains eight hidden layers, of which only one is convolutional. Regularization is provided by three layers: a Batch normalization layer, as described in .., and two Dropout layers.
+
+\begin{table}[!h]
+  \begin{adjustwidth}{-.5in}{-.5in}
+  \begin{center}
+    \begin{tabular}{l | c | c | c | c}
+      layer type 	& output size	& parameters \\
+      \hline
+      input		& 32x32x3	& - \\
+      conv		& 30x30x32 	& kernel 3x3, stride 1 \\
+      max\_pool		& 15x15x32	& stride 2  \\
+      batch\_norm 	& 15x15x32 	& - \\
+      dropout		& 15x15x32	& rate 0.25 \\	
+      flatten		& 7200		& - \\	
+      fc		& 128		& - \\	
+      dropout		& 128		& rate 0.5 \\
+      fc		& 3		& - \\
+      softmax		& 3		& - \\
+    \end{tabular}
+    \caption{Network architecture for all the presented models}
+    \label{tab:arch}
+  \end{center}
+  \end{adjustwidth}
+\end{table}
+
+
+\subsection{BNN model}
+\label{sec:bnn_model}
+The second model is a Bayesian Neural Network implemented with Monte Carlo Dropout. Therefore, the Dropout layers presented in Tab.~\ref{tab:arch} stay active at inference time, bringing to an undeterministic behaviour: this means that, given the same input, the prediction can change when the inference is repeated. This idea is at the base of Variational Dropout and allows to obtain a probability density function for each class in the output, that can be used to compute an uncertainty measure as explained in Sec.~\ref{sec:uncertainty}.
+
+\subsection{Custom model}
+\label{sec:custom_model}
+The last model is equivalent to the one used by ... and therefore can be considered as the baseline of this analysis. The goal of the present work is to build another network which is capable of outperforming the model from Sec.~\ref{sec:bnn_model}.\newline
+This is pursued by designing a network which does not only use Variational Dropout at test time, exploiting instead the possibility of computing a measure of uncertainty at training time. Indeed, following the procedure of Monte Carlo Dropout it is possible to forward pass each batch through the network at training time, computing how confident the network is with respect to the output. Intuitively, the optimization algorithm can leverage this information ignoring \textit{suspicious} samples, and updating the network weights in the direction given by the samples that are considered more likely to have a correct label.\newline
+
+\subsubsection{Custom loss function}
+A way to steer the optimization towards the samples with the most confidence is to customize the loss function, which is computed at the end of each forward pass. The goal of this section, and of the whole project, is therefore to design a loss function that includes information about the confidence of the network with respect to each sample. This can be expressed with a general equation:
+\begin{equation}
+\label{eq1}
+L_{i} = w_{i} * {L_{i}}'
+\end{equation}
+whereby \({L_{i}}'\) is the usual multiclass cross-entropy loss for the \(i\)-th sample and \(w_{i}\) is a weight that summarizes the uncertainty information about the sample in order to drive the optimization algorithm as described above.\newline
+As regards the weight that should be assigned to each sample, it is intuitive to think that it should be higher for real samples and lower for spurious ones. We propose therefore a set of five formulas to compute the weights:
+
+\begin{equation*}
+\begin{aligned}
+\widetilde{w}_{i}^{(\lambda )} = 1-u_{i}^{\lambda} && \textstyle \lambda \in \left \{ 1, 2, 3 \right \} \\
+\widetilde{w}_{i}^{(4)} = e^{-u_{i}} \\
+\widetilde{w}_{i}^{(5)} = e^{-\frac{u_{i}}{\overline{u}}}
+\end{aligned}
+\end{equation*}
+whereby \({u}\) denotes the uncertainty vector described in .. and \(\overline{u}\) denotes its mean.\newline
+It is important to note here that the weights should influence only the direction of the optimization step, not its length. The reason is that the goal of the custom loss function is to determine which samples are more considered in the optimization, but this should not impact on other parts of the algorithm such as the learning rate. Therefore, the weights used in the loss function are normalized by the mean of the weight vector (i.e. the vector of the weights across all samples in the batch). In this way the weights will have a one-mean, which means that, on average, the use of the custom loss function will not impact on the length of the optimization step.\newline
+To summarize, it is possible to define a loss function for each of the above formulas, according to the following equations:
+\begin{align}
+w_{i}^{(\lambda )} = \frac{\widetilde{w}_{i}^{(\lambda )}}{\overline{\widetilde{w}}^{(\lambda)}} \\
+L_{i}^{(\lambda)} = w_{i}^{(\lambda)} * {L_{i}}'
+\end{align}
+
+
+\section{Implementation}
+\label{sec:implementation}
+The implementation is realized using the Python programming language as well as several libraries and frameworks that speed up considerably the implementation process while also optimizing the use of the hardware resources such as GPUs. Specifically, we used Keras with a TensorFlow v2 backend for the construction of the neural networks and Numpy for further computations.\newline
+The software is structured in different modules, that address a different issue each. In particular, the most relevant files are the following:
+
+
+
+\section{Evaluation}
+\label{sec:evaluation}
+In this section the custom models defined in sec.~\ref{sec:custom_model} will be evaluated, in order to find out which of the loss functions performs best. Subsequently, the chosen model will be compared with the baselines, i.e. the model described in sec.~\ref{sec:naive_model} and \ref{sec:bnn_model} according to the metrics presented in sec.~\ref{sec:metrics}.
+
+Tab.~\ref{tab:custom} offers an overview of the performance of the different custom models. All models use 100 predictions at each forward pass and are trained on both real and spurious samples. Since the choice of the loss function is a hyperparameter of the final model, the validation set, not the test set, is used at evaluation time. The columns display respectively the mean accuracy on the real samples, the mean uncertainty on the real samples and the mean uncertainty on the spurious samples. It can be seen that the best performance is achieved by the model that uses L???? as loss function. Therefore this model is chosen for further evaluation and comparison with the baseline. From now on, it will be referred to as UWL-BNN (Bayesian Neural Network with Uncertainty-Weighted Loss).
+
+\begin{table}[!h]
+  \begin{adjustwidth}{-.5in}{-.5in}
+  \begin{center}
+    \begin{tabular}{l | c | c | c}
+      Loss function	& Accuracy	& Uncertainty (real)	& Uncertainty (spurious) \\
+      \hline
+      \(L^1\)		& -		& - 			& - \\      
+      \(L^2\)		& -		& - 			& - \\      
+      \(L^3\)		& -		& - 			& - \\      
+      \(L^4\)		& -		& - 			& - \\      
+      \(L^5\)		& -		& - 			& - \\      
+    \end{tabular}
+    \caption{Evaluation of different custom loss functions}
+    \label{tab:custom}
+  \end{center}
+  \end{adjustwidth}
+\end{table}
+
+Fig.~\ref{fig:n_preds} shows how accuracy on real samples and uncertainty vary according to the number of predictions.
+
+\begin{figure}[!b]
+    \centering
+    \begin{subfigure}{0.35\textwidth}
+	\includegraphics[width=\linewidth]{black.png}
+        \caption{}
+    \end{subfigure}
+    \begin{subfigure}{0.35\textwidth}
+	\includegraphics[width=\linewidth]{black.png}
+        \caption{}
+    \end{subfigure}
+    \caption{}
+    \label{fig:n_preds}
+\end{figure}
+
+Tab.~\ref{tab:colab} provides an overview of the different models described in sec.~\ref{sec:analysis}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained only on real samples, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images.
+The second model is a CNN trained both on real and spurious samples. The third model is a BNN, while the last model is the UWL-BNN introduced at the beginning of this section.
+
+
+\begin{table}[!h]
+  \begin{adjustwidth}{-.5in}{-.5in}
+  \begin{center}
+    \begin{tabular}{l | c | c | c}
+      Loss function	& Accuracy	& Uncertainty (real)	& Uncertainty (spurious) \\
+      \hline
+      CNN (real)	& -		& - 			& - \\      
+      CNN		& -		& - 			& - \\      
+      BNN		& -		& - 			& - \\      
+      UWL-BNN		& -		& - 			& - \\      
+    \end{tabular}
+    \caption{Evaluation of different models}
+    \label{tab:colab}
+  \end{center}
+  \end{adjustwidth}
+\end{table}
+
+DA FARE ANCHE:
+\begin{itemize}
+\item tre grafici ad istogrammi che mostrano l'uncertainty rispettivamente nel modello vanilla (in questo caso softmax uncertainty), nel bnn e nel custom
+\item tre grafici di ROC (o ancora meglio un grafico con tre ROC) che mostrano come cambiano falsi positivi / falsi negativi allo spostamento del threshold rispettivamente nel modello vanilla (n.b. in questo caso i samples SOTTO il threshold sono considerati real), bnn e custom (n.b. in questo caso i samples sopra il threshold sono considerati real)
+\end{itemize}
+
+
+\end{document}
+
