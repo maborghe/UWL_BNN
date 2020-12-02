@@ -15,7 +15,7 @@
 
 \section{Introduction}
 This report presents an application of Bayesian Neural Networks (BNN) in the field of Bioinformatics. In particular, the central topic is if and how the uncertainty measure provided by a BNN can be used to improve the training phase and accordingly the overall performance.\newline
-The report is structured as follows: in sec.~\ref{sec:NN} a brief background of Convolutional and Bayesian Neural Networks is outlines, in sec.~\ref{sec:data} the dataset and the preprocessing phase are presented; in sec.~\ref{sec:analysis} different models with growing complexity are discussed. Such models are then evaluated and compared in sec.~\ref{sec:evaluation}.
+The report is structured as follows: in sec.~\ref{sec:NN} a brief background of Convolutional and Bayesian Neural Networks is outlines, in sec.~\ref{sec:data} the dataset and the preprocessing phase are presented; in sec.~\ref{sec:models} different models with growing complexity are discussed. Such models are then evaluated and compared in sec.~\ref{sec:evaluation}.
 
 \section{Neural Networks for Image Classification}
 \label{sec:NN}
@@ -47,8 +47,8 @@ Before delving into the definition of a new model, it can be useful which goals 
 In this case, there are two objectives that should be reached: being able to correctly classify histological images while also recognizing samples that do not belong to any of the classes of interest. Concretely, the first means that we are interested in achieving a high accuracy among the real images. As for the second part, the goal is to obtain a high uncertainty measure for spurious samples and a low uncertainty for real images, so that it is possible to easily cluster the data according to a threshold.\newline
 As said before, there are different uncertainty measures depending on the type of network: in case of a CNN the only way is to compute the softmax uncertainty, while in case of a BNN it is possible to use the aleatoric and epistemic uncertainties introduced by ...
 
-\section{Analysis}
-\label{sec:analysis}
+\section{Models}
+\label{sec:models}
 The use of BNNs in the outlined context is analyzed on the basis of three models. The first one consists of a CNN trained on real samples only: the purpose of this model is to devise an architecture that is capable of effectively solving the classification task with a small bias in the first place. The same model is then trained on all samples, in order to see how the classification of real samples is impacted by the presence of fake samples in the training set. After this, a BNN is trained on all samples with the aim of assigning an uncertainty measure to the prediction. At last, a BNN is trained with a custom loss function that drives the training process according to the uncertainty assigned to each sample.\newline
 All models use the same network architecture and are trained with the same hyperparameters, that are chosen in the construction of the first model. While this can be a limitation in some cases, e.g. because a model could increase its performance if trained differently, it also provides a fair framework for the comparison of the different alternatives.
 
@@ -108,32 +108,43 @@ As regards the weight that should be assigned to each sample, it is intuitive to
 
 \begin{equation*}
 \begin{aligned}
-\widetilde{w}_{i}^{(\lambda )} = 1-u_{i}^{\lambda} && \textstyle \lambda \in \left \{ 1, 2, 3 \right \} \\
-\widetilde{w}_{i}^{(4)} = e^{-u_{i}} \\
-\widetilde{w}_{i}^{(5)} = e^{-\frac{u_{i}}{\overline{u}}}
+w_{i}^{(\lambda )} = 1-u_{i}^{\lambda} && \textstyle \lambda \in \left \{ 1, 2, 3 \right \} \\
+w_{i}^{(4)} = e^{-u_{i}} \\
+w_{i}^{(5)} = e^{-\frac{u_{i}}{\overline{u}}}
 \end{aligned}
 \end{equation*}
 whereby \({u}\) denotes the uncertainty vector described in .. and \(\overline{u}\) denotes its mean.\newline
-It is important to note here that the weights should influence only the direction of the optimization step, not its length. The reason is that the goal of the custom loss function is to determine which samples are more considered in the optimization, but this should not impact on other parts of the algorithm such as the learning rate. Therefore, the weights used in the loss function are normalized by the mean of the weight vector (i.e. the vector of the weights across all samples in the batch). In this way the weights will have a one-mean, which means that, on average, the use of the custom loss function will not impact on the length of the optimization step.\newline
-To summarize, it is possible to define a loss function for each of the above formulas, according to the following equations:
+The ideas behind these formulas can be explained as follows:
+\begin{itemize}
+\item In \(w_{i}^{(1)}\) the uncertainty of each sample is subtracted from 1. This means that, if the network is completely sure about a sample (i.e. its uncertainty is 0), the whole loss for that sample is considered, otherwise the loss is weighted in an inversely proportional fashion with respect to the uncertainty.
+\item \(w_{i}^{(2)}\) and \(w_{i}^{(3)}\) follow the same approach as \(w_{i}^{(1)}\), with the difference that the uncertainty is squared and cubed, respectively. Since the uncertainty is always less than 1, this means that samples with a low uncertainty have a higher weight than in \(w_{i}^{(1)}\), since a smaller amount is subtracted from 1.
+\item \(w_{i}^{(4)}\) uses division instead of subtraction to obtain higher weights from lower uncertainties. However, dividing by very small uncertainties may lead the network to diverge: therefore, the uncertainty is first fed to an exponential function, which is monotonically increasing and thus mantains the same effect.
+\item \(w_{i}^{(5)}\) is a slight variation of \(w_{i}^{(4)}\), where the uncertainties are first normalized in order to have one-mean.
+\end{itemize}
+
+To conclude, it is possible to define a loss function for each of the above formulas, according to the following equation:
 \begin{align}
-w_{i}^{(\lambda )} = \frac{\widetilde{w}_{i}^{(\lambda )}}{\overline{\widetilde{w}}^{(\lambda)}} \\
 L_{i}^{(\lambda)} = w_{i}^{(\lambda)} * {L_{i}}'
 \end{align}
 
-
 \section{Implementation}
 \label{sec:implementation}
-The implementation is realized using the Python programming language as well as several libraries and frameworks that speed up considerably the implementation process while also optimizing the use of the hardware resources such as GPUs. Specifically, we used Keras with a TensorFlow v2 backend for the construction of the neural networks and Numpy for further computations.\newline
-The software is structured in different modules, that address a different issue each. In particular, the most relevant files are the following:
-
+The implementation is realized using the Python programming language as well as several libraries and frameworks, in order to speed up the implementation process while also optimizing the use of the hardware resources such as GPUs. Specifically, we used Keras with a TensorFlow v2 backend for the construction of the neural networks and Numpy for further computations.\newline
+The software is structured in different modules, that address a different issue each. The most relevant parts are the following ones:
+\begin{itemize}
+\item \emph{data\_setup.py} contains the code for building the training, validation and test sets described in sec.~\ref{sec:data}. It also performs data preprocessing and creates the subsets containing only real/spurious samples
+\item \emph{metric.py} implements the metrics described in sec.~\ref{sec:metrics}. It bases on the function \emph{compute\_pred\_distribution} from the module \emph{utils.py}, which computes the class scores as well as their uncertainties starting from multiple predictions of the same sample.
+\item \emph{network.py} implements the network depicted in tab.~\ref{tab:arch}. In particular, the function \emph{get\_layers} takes a parameter \emph{mc}, which tells whether Monte Carlo Dropout should be used at inference time or not.
+\item \emph{model.py} contains commodity functions that create the models presented in sec.~\ref{sec:models}. In particular, it contains the class \emph{CustomModel}, which implement the model from sec.~\ref{sec:custom_model}: this class overrides the methods \emph{train\_step} and \emph{test\_set} from the class \emph{Model}, which is part of the Keras framework. In this way it is possible to perform multiple predictions for each at training time and to pass their results to a loss function.
+\item \emph{loss.py} XXXXXXXX
+\end{itemize}
 
 
 \section{Evaluation}
 \label{sec:evaluation}
 In this section the custom models defined in sec.~\ref{sec:custom_model} will be evaluated, in order to find out which of the loss functions performs best. Subsequently, the chosen model will be compared with the baselines, i.e. the model described in sec.~\ref{sec:naive_model} and \ref{sec:bnn_model} according to the metrics presented in sec.~\ref{sec:metrics}.
 
-Tab.~\ref{tab:custom} offers an overview of the performance of the different custom models. All models use 100 predictions at each forward pass and are trained on both real and spurious samples. Since the choice of the loss function is a hyperparameter of the final model, the validation set, not the test set, is used at evaluation time. The columns display respectively the mean accuracy on the real samples, the mean uncertainty on the real samples and the mean uncertainty on the spurious samples. It can be seen that the best performance is achieved by the model that uses L???? as loss function. Therefore this model is chosen for further evaluation and comparison with the baseline. From now on, it will be referred to as UWL-BNN (Bayesian Neural Network with Uncertainty-Weighted Loss).
+Tab.~\ref{tab:custom} offers an overview of the performance of the different custom models. All models use 100 predictions at each forward pass and are trained on both real and spurious samples. Since the choice of the loss function is a hyperparameter of the final model, the validation set, not the test set, is used at evaluation time. The columns display respectively the mean accuracy on the real samples, the mean uncertainty on the real samples and the mean uncertainty on the spurious samples. It can be seen that the best performance is achieved by the model that uses L1 as loss function. Therefore this model is chosen for further evaluation and comparison with the baseline. From now on, it will be referred to as UWL-BNN (Bayesian Neural Network with Uncertainty-Weighted Loss).
 
 \begin{table}[!h]
   \begin{adjustwidth}{-.5in}{-.5in}
@@ -169,7 +180,7 @@ Fig.~\ref{fig:n_preds} shows how accuracy on real samples and uncertainty vary a
     \label{fig:n_preds}
 \end{figure}
 
-Tab.~\ref{tab:colab} provides an overview of the different models described in sec.~\ref{sec:analysis}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained only on real samples, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images.
+Tab.~\ref{tab:colab} provides an overview of the different models described in sec.~\ref{sec:models}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained only on real samples, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images.
 The second model is a CNN trained both on real and spurious samples. The third model is a BNN, while the last model is the UWL-BNN introduced at the beginning of this section.
 
 
