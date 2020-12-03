@@ -144,7 +144,10 @@ The software is structured in different modules, that address a different issue 
 \label{sec:evaluation}
 In this section the custom models defined in sec.~\ref{sec:custom_model} will be evaluated, in order to find out which of the loss functions performs best. Subsequently, the chosen model will be compared with the baselines, i.e. the model described in sec.~\ref{sec:naive_model} and \ref{sec:bnn_model} according to the metrics presented in sec.~\ref{sec:metrics}.
 
-Tab.~\ref{tab:custom} offers an overview of the performance of the different custom models. All models use 100 predictions at each forward pass and are trained on both real and spurious samples. Since the choice of the loss function is a hyperparameter of the final model, the validation set, not the test set, is used at evaluation time. The columns display respectively the mean accuracy on the real samples, the mean uncertainty on the real samples and the mean uncertainty on the spurious samples. It can be seen that the best performance is achieved by the model that uses L1 as loss function. Therefore this model is chosen for further evaluation and comparison with the baseline. From now on, it will be referred to as UWL-BNN (Bayesian Neural Network with Uncertainty-Weighted Loss).
+Tab.~\ref{tab:custom} offers an overview of the performance of the different custom models. All models use 100 predictions at each forward pass and are trained on both real and spurious samples. Since the choice of the loss function is a hyperparameter of the final model, the validation set, not the test set, is used at evaluation time. The columns display respectively the mean accuracy on the real samples, the mean uncertainty on the real samples and the mean uncertainty on the spurious samples.
+It is important to note that the accuracy refers to real images only: in fact it is of no interest to know which class is predicted in case of spurious samples, since the labels are in any case wrong.
+
+It can be seen that the best performance is achieved by the model that uses L1 as loss function: in fact, beside having the best accuracy, it also maximizes the gap between real and spurious samples in terms of uncertainty, making it easier to recognize if a sample is real or not. Therefore this model is chosen for further evaluation and comparison with the baseline. From now on, it will be referred to as UWL-BNN (Bayesian Neural Network with Uncertainty-Weighted Loss).
 
 \begin{table}[!h]
   \begin{adjustwidth}{-.5in}{-.5in}
@@ -180,9 +183,8 @@ Fig.~\ref{fig:n_preds} shows how accuracy on real samples and uncertainty vary a
     \label{fig:n_preds}
 \end{figure}
 
-Tab.~\ref{tab:colab} provides an overview of the different models described in sec.~\ref{sec:models}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained only on real samples, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images.
-The second model is a CNN trained both on real and spurious samples. The third model is a BNN, while the last model is the UWL-BNN introduced at the beginning of this section.
-
+Tab.~\ref{tab:colab} provides an overview of the different models described in sec.~\ref{sec:models}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained only on real samples, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images. The second model is a CNN trained both on real and spurious samples. The third model is a BNN, while the last model is the UWL-BNN introduced at the beginning of this section.\newline
+Clearly, the CNN model trained on real samples performs best, since it does not have to deal with spurious images. Indeed, as soon as those are used at training time the accuracy drops drastically. When a BNN is used, the accuracy improves, probably because the class scores are computed as an average of multiple predictions. The BNN also produces an uncertainty measure through the use of Variational Dropout. At last, the UWL\_BNN model achieves the best accuracy when spurious samples are present in the training set. Besides, it also has lower mean uncertainty for real samples as well as higher mean uncertainty for spurios one.\newline
 
 \begin{table}[!h]
   \begin{adjustwidth}{-.5in}{-.5in}
@@ -201,12 +203,25 @@ The second model is a CNN trained both on real and spurious samples. The third m
   \end{adjustwidth}
 \end{table}
 
-DA FARE ANCHE:
-\begin{itemize}
-\item tre grafici ad istogrammi che mostrano l'uncertainty rispettivamente nel modello vanilla (in questo caso softmax uncertainty), nel bnn e nel custom
-\item tre grafici di ROC (o ancora meglio un grafico con tre ROC) che mostrano come cambiano falsi positivi / falsi negativi allo spostamento del threshold rispettivamente nel modello vanilla (n.b. in questo caso i samples SOTTO il threshold sono considerati real), bnn e custom (n.b. in questo caso i samples sopra il threshold sono considerati real)
-\end{itemize}
+The uncertainty assigned by each model to the samples can be further analyzed by means of histograms, plotting how often the network output a value in a given range. Fig.~\ref{fig:histograms} shows such histogram for each of the three models trained on both real and spurious samples. In case of the CNN model the x-axis refers to the softmax uncertainty values obtained from the network output. It can be notices that the BNN and the UWL\_BNN models are capable of differentiating more between real and spurious samples, since they present higher peaks at the extreme values and lower plateaus in the middle. In fact, if a sample is assigned an uncertainty value in the middle range it is more difficult to predict for certain if it is real or not.
 
+\begin{figure}[!b]
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+	\includegraphics[width=\linewidth]{histo_CNN_all_real+fake.png}
+        \caption{}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+	\includegraphics[width=\linewidth]{histo_BNN_all_real+fake.png}
+        \caption{}
+    \end{subfigure}
+	\begin{subfigure}{0.49\textwidth}
+	\includegraphics[width=\linewidth]{histo_Custom_all_real+fake.png}
+        \caption{}
+    \end{subfigure}
+    \caption{}
+    \label{fig:histograms}
+\end{figure}
 
 \end{document}
 
