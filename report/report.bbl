@@ -1,0 +1,45 @@
+\begin{thebibliography}{1}
+
+\bibitem{gal2016dropout}
+Yarin Gal and Zoubin Ghahramani.
+\newblock Dropout as a bayesian approximation: Representing model uncertainty
+  in deep learning.
+\newblock In {\em international conference on machine learning}, pages
+  1050--1059, 2016.
+
+\bibitem{he2016deep}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In {\em Proceedings of the IEEE conference on computer vision and
+  pattern recognition}, pages 770--778, 2016.
+
+\bibitem{ioffe2015batch}
+Sergey Ioffe and Christian Szegedy.
+\newblock Batch normalization: Accelerating deep network training by reducing
+  internal covariate shift.
+\newblock {\em arXiv preprint arXiv:1502.03167}, 2015.
+
+\bibitem{james2013introduction}
+Gareth James, Daniela Witten, Trevor Hastie, and Robert Tibshirani.
+\newblock {\em An introduction to statistical learning}, volume 112.
+\newblock Springer, 2013.
+
+\bibitem{kwon2018uncertainty}
+Yongchan Kwon, Joong-Ho Won, Beom~Joon Kim, and Myunghee~Cho Paik.
+\newblock Uncertainty quantification using bayesian neural networks in
+  classification: Application to ischemic stroke lesion segmentation.
+\newblock 2018.
+
+\bibitem{ng2017machine}
+Andrew Ng.
+\newblock Machine learning yearning.
+\newblock {\em URL: http://www. mlyearning. org/(96)}, 2017.
+
+\bibitem{srivastava2014dropout}
+Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Ruslan
+  Salakhutdinov.
+\newblock Dropout: a simple way to prevent neural networks from overfitting.
+\newblock {\em The journal of machine learning research}, 15(1):1929--1958,
+  2014.
+
+\end{thebibliography}
