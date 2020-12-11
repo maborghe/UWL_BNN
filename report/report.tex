@@ -106,6 +106,7 @@ This is pursued by designing a network which does not only use Variational Dropo
 Intuitively, the optimization algorithm can leverage this information ignoring \textit{suspicious} samples, and updating the network weights in the direction given by the samples that are considered more likely to have a correct label.\newline
 
 \subsubsection{Custom loss function}
+\label{sec:loss}
 A way to steer the optimization towards the samples with the most confidence is to customize the loss function, which is computed at the end of each forward pass. The goal of this section, and of the whole project, is therefore to design a loss function that includes information about the confidence of the network with respect to each sample. This can be expressed with a general equation:
 \begin{equation}
 \label{eq1}
@@ -145,7 +146,7 @@ The software is structured in different modules, that address a different issue 
 \item \emph{metric.py} implements the metrics described in sec.~\ref{sec:metrics}. It bases on the function \emph{compute\_pred\_distribution} from the module \emph{utils.py}, which computes the class scores as well as their uncertainties starting from multiple predictions of the same sample.
 \item \emph{network.py} implements the network depicted in tab.~\ref{tab:arch}. In particular, the function \emph{get\_layers} takes a parameter \emph{mc}, which tells whether Monte Carlo Dropout should be used at inference time or not.
 \item \emph{model.py} contains commodity functions that create the models presented in sec.~\ref{sec:models}. In particular, it contains the class \emph{CustomModel}, which implement the model from sec.~\ref{sec:custom_model}: this class overrides the methods \emph{train\_step} and \emph{test\_set} from the class \emph{Model}, which is part of the Keras framework. In this way it is possible to perform multiple predictions for each at training time and to pass their results to a loss function.
-\item \emph{loss.py} XXXXXXXX
+\item \emph{loss.py} which contains the five loss functions presented in sec.~\ref{sec:loss}.
 \end{itemize}
 
 
@@ -178,14 +179,14 @@ It can be seen that the best performance is achieved by the model that uses \(L^
 \begin{figure}[!t]
     \centering
     \begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{Accuracy-Repetitions.png}
+	\includegraphics[width=\linewidth]{images/accuracy_preds.png}
         \caption{}
     \end{subfigure}
     \begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{Uncertainties-Repetitions.png}
+	\includegraphics[width=\linewidth]{images/uc_preds.png}
         \caption{}
     \end{subfigure}
-    \caption{Accuracy and uncertainties of the UWL-BNN model as the number of predictions per step changes}
+    \caption{Accuracy (a) and uncertainties (b) of the UWL-BNN model as the number of predictions per step changes}
     \label{fig:n_predictions}
 \end{figure}
 
@@ -215,15 +216,15 @@ Clearly, the CNN model trained on real samples performs best, since it does not 
 \begin{figure}[!t]
     \centering
     \begin{subfigure}{0.30\textwidth}
-	\includegraphics[width=\linewidth]{histo_CNN_all_real+fake.png}
+	\includegraphics[width=\linewidth]{images/histo_CNN_all_real+fake.png}
         \caption{}
     \end{subfigure}
     \begin{subfigure}{0.30\textwidth}
-	\includegraphics[width=\linewidth]{histo_BNN_all_real+fake.png}
+	\includegraphics[width=\linewidth]{images/histo_BNN_all_real+fake.png}
         \caption{}
     \end{subfigure}
 	\begin{subfigure}{0.30\textwidth}
-	\includegraphics[width=\linewidth]{histo_Custom_all_real+fake.png}
+	\includegraphics[width=\linewidth]{images/histo_Custom_all_real+fake.png}
         \caption{}
     \end{subfigure}
     \caption{Uncertainties computed by the CNN (a), BNN (b) and UWL-BNN (c) model on the whole dataset}
@@ -233,11 +234,11 @@ Clearly, the CNN model trained on real samples performs best, since it does not 
 \begin{figure}[!b]
     \centering
     \begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{ROC_BNN.png}
+	\includegraphics[width=\linewidth]{images/ROC_BNN.png}
         \caption{}
     \end{subfigure}
     \begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{ROC_Custom.png}
+	\includegraphics[width=\linewidth]{images/ROC_Custom.png}
         \caption{}
     \end{subfigure}
     \caption{Roc curves of the BNN (a) and UWL-BNN (b) model}
