@@ -1,18 +1,19 @@
 import numpy as np
 import keras
 import tensorflow as tf
+from tensorflow.python.keras.callbacks import ModelCheckpoint
+
 import data_setup
 from sklearn.metrics import accuracy_score
 import keras.backend as K
 
 # Hyperparameters
 batch_size = 32
-t = 100  # a.k.a. num predictions
+t = 100  # num predictions in BNN
 
 
-def train_model(model, x_train, y_train, x_val, y_val, epochs):
+def train_model(model, model_name, x_train, y_train, x_val, y_val, epochs):
     # We cut the samples so that it is a multiple of the batch size
-    # TODO: It's not necessary to do that!
     rem_train = x_train.shape[0] % batch_size
     if rem_train != 0:
         x_train = x_train[:-rem_train]
@@ -22,8 +23,10 @@ def train_model(model, x_train, y_train, x_val, y_val, epochs):
         x_val = x_val[:-rem_val]
         y_val = y_val[:-rem_val]
 
+    val_acc_name = 'val_custom_acc' if model_name == 'uwl_bnn' else 'val_accuracy'
+    mc = ModelCheckpoint(model_name, monitor=val_acc_name, mode='max', save_best_only=True, verbose=1)
     with tf.device("gpu:0"):
-        model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1,
+        model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[mc],
                   validation_data=(x_val, y_val))
 
 

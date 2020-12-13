@@ -2,7 +2,7 @@ from keras.models import Sequential, Model, Input
 from keras.layers import Dense, InputLayer, Dropout, Conv2D, MaxPooling2D, Flatten, Activation, Add, BatchNormalization
 import data_setup
 
-dropout_rate = 0.4
+dropout_rate = 0.25
 
 # Network architecture
 def get_dropout(input_tensor, p, mc):
