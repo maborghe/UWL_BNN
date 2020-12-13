@@ -24,7 +24,7 @@ def train_model(model, model_path, x_train, y_train, x_val, y_val, epochs):
         y_val = y_val[:-rem_val]
 
     model_name = model_path.split('/')[-1]
-    val_acc_name = 'val_custom_acc' if model_name == 'uwl_bnn.h5' else 'val_accuracy'
+    val_acc_name = 'val_custom_acc' if 'uwl_bnn' in model_name else 'val_accuracy'
     mc = ModelCheckpoint(model_path, monitor=val_acc_name, mode='max', save_best_only=True, verbose=1)
     with tf.device("gpu:0"):
         history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[mc],
