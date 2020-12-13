@@ -27,8 +27,9 @@ def train_model(model, model_path, x_train, y_train, x_val, y_val, epochs):
     val_acc_name = 'val_custom_acc' if model_name == 'uwl_bnn.h5' else 'val_accuracy'
     mc = ModelCheckpoint(model_path, monitor=val_acc_name, mode='max', save_best_only=True, verbose=1)
     with tf.device("gpu:0"):
-        model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[mc],
-                  validation_data=(x_val, y_val))
+        history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[mc],
+                            validation_data=(x_val, y_val))
+    return history
 
 
 # This function computes the accuracy and the uncertainty of a model wrt a set of samples
