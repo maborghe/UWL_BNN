@@ -152,7 +152,7 @@ The software is structured in different modules, that address a different issue 
 
 \section{Evaluation}
 \label{sec:evaluation}
-In this section the custom models defined in sec.~\ref{sec:custom_model} will be evaluated, in order to find out which of the loss functions performs best. Subsequently, the chosen model will be compared with the baselines, i.e. the models described in sec.~\ref{sec:naive_model} and \ref{sec:bnn_model} according to the metrics presented in sec.~\ref{sec:metrics}. All models are trained for 30 epochs, with a starting learning rate of \(10^{-5}\) and a decay rate of 0.8 every 1000 steps. When multiple predictions are necessary (in case of BNNs), the forward pass is repeated 100 times for each batch.
+In this section the custom models defined in sec.~\ref{sec:custom_model} will be evaluated, in order to find out which of the loss functions performs best. Subsequently, the chosen model will be compared with the baselines, i.e. the models described in sec.~\ref{sec:naive_model} and \ref{sec:bnn_model} according to the metrics presented in sec.~\ref{sec:metrics}. All models are trained for 30 epochs, with a starting learning rate of \(10^{-5}\) and a decay rate of 0.8 every 1000 steps. When multiple predictions are necessary (in case of BNNs), the forward pass is repeated 100 times for each batch. At the end of the training phase, it is considered at which epoch each model had the best validation accuracy, and the weights at that epoch are kept for the evaluation.
 
 Tab.~\ref{tab:custom} offers an overview of the performance of the different custom models. Since the choice of the loss function is a hyperparameter of the final model, the validation set, not the test set, is used at evaluation time. The columns display respectively the mean accuracy on the real samples, the mean uncertainty on the real samples and the mean uncertainty on the spurious samples.
 It is important to note that the accuracy refers to real images only: in fact it is of no interest to know which class is predicted in case of spurious samples, since the labels don't correspond to the actual classes.\newline
@@ -164,7 +164,7 @@ It can be seen that the best performance is achieved by the model that uses \(L^
     \begin{tabular}{l | c | c | c}
       Loss function	& Accuracy	& Uncertainty (real)	& Uncertainty (spurious) \\
       \hline
-      \(L^1\)		& 88,0 \%		& 9,1  \% 			& 20,0 \% \\      
+      \(L^1\)		& 89,6 \%		& 8,2  \% 			& 19,4 \% \\      
       \(L^2\)		& 84,8 \%		& 8,9 \% 			& 19,4 \% \\      
       \(L^3\)		& 74,4 \%		& 9,4 \% 			& 18,4 \% \\      
       \(L^4\)		& 81,2 \%		& 8,7 \% 			& 18,3 \% \\      
@@ -190,9 +190,19 @@ It can be seen that the best performance is achieved by the model that uses \(L^
     \label{fig:n_predictions}
 \end{figure}
 
-The major drawback of the presented model is that it needs considerably more time to be trained. In fact, each forward pass is repeated multiple times, which leads to a linear increase in the training time. In order to provide some insights for future work, fig.~\ref{fig:n_predictions} shows how the performance of the model varies as the number of predictions is changed.
+\begin{figure}[!b]
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+	\includegraphics[width=\linewidth]{images/train_history.png}
+    \end{subfigure}
+    \caption{Training and validation accuracy of the UWL-BNN model}
+    \label{fig:train_history}
+\end{figure}
 
-Tab.~\ref{tab:colab} provides an overview of the different models described in sec.~\ref{sec:models}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained on real samples only, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images. The second model is a CNN trained both on real and spurious samples. The third model is a BNN, while the last model is the UWL-BNN introduced at the beginning of this section. Since the goal here is not to finetune a model, but to have a reliable metric of how good each model performs, the results in the table are computed using the test set.
+The major drawback of the presented model is that it needs considerably more time to be trained. In fact, each forward pass is repeated multiple times, which leads to a linear increase in the training time. In order to provide some insights for future work, fig.~\ref{fig:n_predictions} shows how the performance of the model varies as the number of predictions is changed. It can be seen that the accuracy increases with the number of predictions; however, the increase between 50 and 100 is less steep, and in the same interval there is also a reduction of the gap between the mean uncertainty among real and spurious samples. Therefore it could be reasonable to choose 50 as a tradeoff, even though we will stick to the value of 100 in the context of this work.\newline
+A further reason of concern as regards the UWL-BNN model are the fluctuations of the validation accuracy during the training phase, as shown in fig.\ref{fig:train_history}. In fact, while the training accuracy steadily increases along with the number of epochs, the validation accuracy curve has a very irregular shape. This is partly due to the fact that the training and the validation set come from different distributions, since the validation set does not contain spurious samples. Indeed, the same pattern occurs also in the training of the CNN and BNN models from sec.~\ref{sec:naive_model} - \ref{sec:bnn_model}. However, in the case of the UWL-BNN model this is particularly evident and shows that the update of the network parameters often does not lead to an improvement in the metrics.\newline
+
+As for the second part of the evaluation, tab.~\ref{tab:colab} provides an overview of the performances of the models described in sec.~\ref{sec:models}. While the metrics are the same as in tab.~\ref{tab:custom}, it can be helpful to revise the differences between the models. The first one is a CNN trained on real samples only, with the purpose of providing a reference for how good the chosen network architecture solves the classification of histological images. The second model is a CNN trained both on real and spurious samples. The third model is a BNN, while the last model is the UWL-BNN introduced at the beginning of this section. Since the goal here is not to finetune a model, but to have a reliable metric of how good each model performs, the results in the table are computed using the test set.
 
 Clearly, the CNN model trained on real samples performs best, since it does not have to deal with spurious images. Indeed, as soon as those are used at training time the accuracy drops drastically. When a BNN is used, the accuracy improves, probably because the class scores are computed as an average of multiple predictions. The BNN also produces an uncertainty measure through the use of Variational Dropout. At last, the UWL-BNN model achieves the best accuracy when spurious samples are present in the training set. Besides, it also has lower mean uncertainty for real samples as well as higher mean uncertainty for spurios ones.
 
@@ -202,10 +212,10 @@ Clearly, the CNN model trained on real samples performs best, since it does not 
     \begin{tabular}{l | c | c | c}
       Loss function	& Accuracy	& Uncertainty (real)	& Uncertainty (spurious) \\
       \hline
-      CNN (real)	& 96,2 \%		& - 				& - \\      
-      CNN		& 72,7 \%		& - 				& - \\      
-      BNN		& 79,5 \%		& 10,4 \% 			& 19,9 \% \\      
-      UWL-BNN		& 88,0 \%		& 9,1  \% 			& 20,0 \% \\       
+      CNN (real)	& 95,50 \%		& - 				& - \\      
+      CNN		& 71,8 \%		& - 				& - \\      
+      BNN		& 82,1 \%		& 10,4 \% 			& 19,7 \% \\      
+      UWL-BNN		& 90,2 \%		& 8,3  \% 			& 19,3 \% \\       
     \end{tabular}
     \caption{Evaluation of different models}
     \label{tab:colab}
@@ -213,35 +223,35 @@ Clearly, the CNN model trained on real samples performs best, since it does not 
   \end{adjustwidth}
 \end{table}
 
-\begin{figure}[!t]
+\begin{figure}[!b]
     \centering
     \begin{subfigure}{0.30\textwidth}
-	\includegraphics[width=\linewidth]{images/histo_CNN_all_real+fake.png}
+	\includegraphics[width=\linewidth]{images/histo_cnn.png}
         \caption{}
     \end{subfigure}
     \begin{subfigure}{0.30\textwidth}
-	\includegraphics[width=\linewidth]{images/histo_BNN_all_real+fake.png}
+	\includegraphics[width=\linewidth]{images/histo_bnn.png}
         \caption{}
     \end{subfigure}
 	\begin{subfigure}{0.30\textwidth}
-	\includegraphics[width=\linewidth]{images/histo_Custom_all_real+fake.png}
+	\includegraphics[width=\linewidth]{images/histo_custom.png}
         \caption{}
     \end{subfigure}
-    \caption{Uncertainties computed by the CNN (a), BNN (b) and UWL-BNN (c) model on the whole dataset}
+    \caption{Uncertainties computed by the CNN (a), BNN (b) and UWL-BNN (c) models on the whole dataset}
     \label{fig:histograms}
 \end{figure}
 
-\begin{figure}[!b]
+\begin{figure}[!t]
     \centering
     \begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{images/ROC_BNN.png}
+	\includegraphics[width=\linewidth]{images/roc_bnn.png}
         \caption{}
     \end{subfigure}
     \begin{subfigure}{0.49\textwidth}
-	\includegraphics[width=\linewidth]{images/ROC_Custom.png}
+	\includegraphics[width=\linewidth]{images/roc_custom.png}
         \caption{}
     \end{subfigure}
-    \caption{Roc curves of the BNN (a) and UWL-BNN (b) model}
+    \caption{Roc curves of the BNN (a) and UWL-BNN (b) models}
     \label{fig:roc}
 \end{figure}
 
@@ -249,11 +259,13 @@ The uncertainty assigned by each model to the samples can be further analyzed by
 
 In case of the BNN, however, it is not straightforward to tell if it is capable of better differentiating real and spurious samples than the UWL-BNN or not (although a first clue is given by the mean uncertanties in tab.~\ref{tab:colab}). In other terms, it should be analyzed which of the two models allows to better recognize spurious samples using a single threshold with respect to the uncertainties.\newline
 For this purpose, we consider a binary classification setting where the goal is to predict if a sample is real or spurious. In this setting, the uncertainty values can be considered as classification scores, i.e. they express the probability that a given sample is spurious. Now it is possible to compare the two models by considering their Roc curves with respect to this task. A Roc curve shows how true positives and false positives behave as the threshold in a binary classification changes. The greater the integral of the Roc curve (also called Area Under Curve, or Auc), the better the model.\newline
-Fig.~\ref{fig:roc} shows the Roc curves of the BNN and the UWL-BNN model, respectively. It can be seen that the Auc of the UWL-BNN is 0.81, while the BNN only gets to 0.74. This confirms the hypothesis that the UWL-BNN is able of better differentiating real from spurious samples basing on their uncertainties.
+Fig.~\ref{fig:roc} shows the Roc curves of the BNN and the UWL-BNN model, respectively. It can be seen that the Auc of the UWL-BNN is 0.81, while the BNN only gets to 0.73. This confirms the hypothesis that the UWL-BNN is able of better differentiating real from spurious samples basing on their uncertainties.
 
 \section{Conclusion}
 The present work shows that the uncertainty measure computed in a BNN can be used in the training phase in order to improve the performance of the network at test time. However, this comes at a cost in term of resources: in particular, the time required to train the network increases proportionally to the number of predictions made at each step. While it is possible to overcome this issue in case of a small network such as the one presented in this work, it should be considered to which extent it is feasible to use this feature in bigger networks. Also, it could be interesting to further analyse the tradeoff between the number of predictions at each step and the performance of the network.\newline
-A further line of future development would be to perform a separate finetuning for each model. In fact, in this work a single framework was used in order to provide a fair comparison between the models, however it could be possible to achieve a better performance by searching the best hyperparameters for each model. On the one hand, it is infeasible to fully scan the hyperparameter space, however a first step could be to explore different network architectures, learning rate schedules or number of epochs.
+A further line of future development would be to perform a separate finetuning for each model. In fact, in this work a single framework was used in order to provide a fair comparison between the models, however it could be possible to achieve a better performance by searching the best hyperparameters for each model. On the one hand, it is infeasible to fully scan the hyperparameter space, however a first step could be to explore different network architectures or learning rate schedules.
+
+\newpage
 
 \bibliographystyle{plain}
 \bibliography{bibliography} 
