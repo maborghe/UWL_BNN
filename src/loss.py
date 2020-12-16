@@ -4,9 +4,8 @@ import tensorflow as tf
 import keras.backend as K
 
 
-# we define our custom loss function here
-# y_pred is the matrix of all T predictions for each sample
 def my_loss_fct(y_true, y_pred):
+    # y_pred is the matrix of all T predictions for each sample
     y_pred_mean, y_pred_uc = utils.compute_pred_distribution(y_pred)
     pred_class = K.argmax(y_pred_mean, axis=-1)
     pred_class = tf.reshape(pred_class, [-1, 1])

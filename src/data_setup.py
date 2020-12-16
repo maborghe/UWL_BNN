@@ -24,7 +24,6 @@ def get_train_data():
     real_classes_train_ids = [i for i, label in enumerate(real_classes_train) if label in ['AH', 'AD', 'H']]
     print('Train samples: ' + str(x_train.shape[0]))
     print('Train samples: ' + str(x_train.shape[0]))
-    # plt.imshow(x_train[0])
 
     x_train = np.concatenate((x_train, x_train_flip))
     y_train = np.concatenate((y_train, y_train))
@@ -88,8 +87,6 @@ def get_dev_test_data():
     test_ids = [n for n in range(n_test) if n not in val_ids]
     x_val = x_test_orig[val_ids]
     x_test = x_test_orig[test_ids]
-    y_val = y_test_orig[val_ids]
-    y_test = y_test_orig[test_ids]
 
     # Val/test set
     val_real_ids = [id for id in val_ids if id in real_classes_test_ids]
@@ -110,22 +107,21 @@ def get_dev_test_data():
     print('Real validation samples: ', x_val_real.shape[0])
     print('Real test samples: ', x_test_real.shape[0])
 
-    return x_val_real, y_val_real, x_val_fake, y_val_fake,\
-           x_test_real, y_test_real, x_test_fake, y_test_fake
+    return x_val_real, y_val_real, x_val_fake, y_val_fake, x_test_real, y_test_real, x_test_fake, y_test_fake
 
 
-def augment_data():
-    # X = np.concatenate((X_train, X_test))
-    # n_tot_samples = X.shape[0]
-    # for i in range(n_tot_samples):
-    #  sample = X[i]
-    #  res = np.flip(sample, axis=1) # mirror image
-    #  X = np.append(X, [res], axis=0)
+def augment_data(x_train, x_test, y_train, y_test):
+    x = np.concatenate((x_train, x_test))
+    n_tot_samples = x.shape[0]
+    for i in range(n_tot_samples):
+        sample = x[i]
+        res = np.flip(sample, axis=1) # mirror image
+        x = np.append(x, [res], axis=0)
 
-    # X_flip = X[n_tot_samples:]
-    # n_train_samples = X_train.shape[0]
-    # X_train_flip = X_flip[:n_train_samples]
-    # Y_train_flip = Y_train
-    # X_test_flip = X_flip[n_train_samples:]
-    # Y_test_flip = Y_test
-    return 0
+    x_flip = x[n_tot_samples:]
+    n_train_samples = x_train.shape[0]
+    x_train_flip = x_flip[:n_train_samples]
+    y_train_flip = y_train
+    x_test_flip = x_flip[n_train_samples:]
+    y_test_flip = y_test
+    return x_train_flip, y_train_flip, x_test_flip, y_test_flip
